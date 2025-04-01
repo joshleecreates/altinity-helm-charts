@@ -1,17 +1,18 @@
 name: Documentation
 
 on:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
-    paths:
-      - '**/*.md'
-      - 'charts/*/values.yaml'
-      - 'charts/*/values.schema.json'
-
+  # pull_request:
+  #   branches:
+  #     - main
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - '**/*.md'
+  #     - '**/*.gotmpl'
+  #     - 'charts/*/values.yaml'
+  #     - 'charts/*/values.schema.json'
+  #
 jobs:
   generate-docs:
     runs-on: ubuntu-latest
