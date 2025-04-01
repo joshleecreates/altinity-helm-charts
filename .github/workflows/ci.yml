@@ -29,10 +29,10 @@ jobs:
           helm repo add altinity https://helm.altinity.com/
           helm repo update
 
-      - name: Install helm dependencies
-        run: |
-          # Install dependencies for verification
-          cd charts/clickhouse && helm dependency update
+      # - name: Install helm dependencies
+      #   run: |
+      #     # Install dependencies for verification
+      #     cd charts/clickhouse && helm dependency update
 
       - name: Run verify scripts
         run: make verify
