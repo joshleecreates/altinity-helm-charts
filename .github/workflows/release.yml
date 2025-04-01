@@ -1,13 +1,75 @@
-name: Release Charts
+name: Helm Charts Workflow
 
 on:
   push:
     branches:
       - main
+    tags:
+      - '*'
     paths-ignore:
       - '**/README.md'
+  pull_request:
+    branches:
+      - main
+
 jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Install dependencies
+        run: |
+          # Install kubeconform for validation
+          curl -Lo kubeconform https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64
+          chmod +x kubeconform
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: Run verify scripts
+        run: make verify
+
+  generate-docs:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Install helm-docs
+        run: |
+          curl -Lo helm-docs.tar.gz https://github.com/norwoodj/helm-docs/releases/latest/download/helm-docs_linux_amd64.tar.gz
+          tar -xzf helm-docs.tar.gz
+          sudo mv helm-docs /usr/local/bin/
+
+      - name: Check for directly edited markdown files
+        if: github.event_name == 'pull_request'
+        run: |
+          # Get modified files in the PR
+          MODIFIED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -E '\.md$' || true)
+          
+          if [ -n "$MODIFIED_FILES" ]; then
+            # Check if there are differences after running make docs
+            git diff --exit-code || {
+              echo "Error: The following markdown files were edited directly instead of being generated with 'make docs':"
+              git diff --name-only | grep -E '\.md$'
+              echo "Please update the source files and run 'make docs' instead of editing these files directly."
+              exit 1
+            }
+          fi
+
   release:
+    needs: [verify, generate-docs]
+    if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -16,6 +78,17 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Install helm-docs
+        run: |
+          curl -Lo helm-docs.tar.gz https://github.com/norwoodj/helm-docs/releases/latest/download/helm-docs_linux_amd64.tar.gz
+          tar -xzf helm-docs.tar.gz
+          sudo mv helm-docs /usr/local/bin/
 
       - name: Configure Git
         run: |
@@ -27,7 +100,35 @@ jobs:
           helm repo add altinity-operator https://docs.altinity.com/clickhouse-operator
           helm repo add altinity https://helm.altinity.com/
 
+      - name: Generate docs
+        run: make docs
+
+      - name: Find and extract chart name from tag
+        id: extract-chart
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          # Extract chart name if tag follows pattern like chart-name-x.y.z
+          CHART_NAME=$(echo $TAG | sed -E 's/([^-]+)-[0-9]+\.[0-9]+\.[0-9]+.*/\1/')
+          echo "chart_name=$CHART_NAME" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Check if release exists
+        id: check_release
+        run: |
+          CHART_NAME="${{ steps.extract-chart.outputs.chart_name }}"
+          TAG="${{ steps.extract-chart.outputs.tag }}"
+          
+          # Check if a release for this chart version already exists
+          if helm repo update && helm search repo altinity/$CHART_NAME --version ${TAG#$CHART_NAME-} > /dev/null 2>&1; then
+            echo "Release already exists for $TAG"
+            echo "release_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "No release found for $TAG"
+            echo "release_exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run chart-releaser
+        if: steps.check_release.outputs.release_exists != 'true'
         uses: helm/chart-releaser-action@v1.6.0
         with:
           charts_dir: charts
