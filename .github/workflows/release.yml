@@ -16,7 +16,7 @@ jobs:
   #   uses: ./.github/workflows/docs.yml
 
   release:
-    # needs: [verify]
+    needs: [verify]
     permissions:
       contents: write
     runs-on: ubuntu-latest
