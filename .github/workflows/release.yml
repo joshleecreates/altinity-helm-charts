@@ -83,24 +83,24 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "skip=false" >> $GITHUB_OUTPUT
 
-      - name: Check if release exists
-        if: steps.extract-chart.outputs.skip != 'true'
-        id: check_release
-        run: |
-          CHART_NAME="${{ steps.extract-chart.outputs.chart_name }}"
-          TAG="${{ steps.extract-chart.outputs.tag }}"
+      # - name: Check if release exists
+      #   if: steps.extract-chart.outputs.skip != 'true'
+      #   id: check_release
+      #   run: |
+      #     CHART_NAME="${{ steps.extract-chart.outputs.chart_name }}"
+      #     TAG="${{ steps.extract-chart.outputs.tag }}"
           
-          # Check if a release for this chart version already exists
-          if helm repo update && helm search repo altinity/$CHART_NAME --version ${TAG#$CHART_NAME-} > /dev/null 2>&1; then
-            echo "Release already exists for $TAG"
-            echo "release_exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "No release found for $TAG"
-            echo "release_exists=false" >> $GITHUB_OUTPUT
-          fi
+      #     # Check if a release for this chart version already exists
+      #     if helm repo update && helm search repo altinity/$CHART_NAME --version ${TAG#$CHART_NAME-} > /dev/null 2>&1; then
+      #       echo "Release already exists for $TAG"
+      #       echo "release_exists=true" >> $GITHUB_OUTPUT
+      #     else
+      #       echo "No release found for $TAG"
+      #       echo "release_exists=false" >> $GITHUB_OUTPUT
+      #     fi
 
       - name: Run chart-releaser
-        if: steps.extract-chart.outputs.skip != 'true' && steps.check_release.outputs.release_exists != 'true'
+        if: steps.extract-chart.outputs.skip != 'true'
         uses: helm/chart-releaser-action@v1.6.0
         with:
           charts_dir: charts
