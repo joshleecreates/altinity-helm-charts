@@ -46,42 +46,42 @@ jobs:
       # - name: Generate docs
       #   run: make docs
 
-      - name: Extract chart details
-        id: extract-chart
-        run: |
-          # Handle both tag and branch push events
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            TAG=${GITHUB_REF#refs/tags/}
-            # Extract chart name if tag follows pattern like chart-name-x.y.z
-            CHART_NAME=$(echo $TAG | sed -E 's/([^-]+)-[0-9]+\.[0-9]+\.[0-9]+.*/\1/')
-            echo "Using tag: $TAG"
-          else
-            # For branch pushes, we'll scan for modified charts
-            echo "Scanning for modified charts in branch push..."
-            # Find all modified charts by checking Chart.yaml changes
-            MODIFIED_CHARTS=$(git diff --name-only HEAD~1 HEAD | grep "charts/.*/Chart.yaml" || echo "")
+      # - name: Extract chart details
+      #   id: extract-chart
+      #   run: |
+      #     # Handle both tag and branch push events
+      #     if [[ "${{ github.ref_type }}" == "tag" ]]; then
+      #       TAG=${GITHUB_REF#refs/tags/}
+      #       # Extract chart name if tag follows pattern like chart-name-x.y.z
+      #       CHART_NAME=$(echo $TAG | sed -E 's/([^-]+)-[0-9]+\.[0-9]+\.[0-9]+.*/\1/')
+      #       echo "Using tag: $TAG"
+      #     else
+      #       # For branch pushes, we'll scan for modified charts
+      #       echo "Scanning for modified charts in branch push..."
+      #       # Find all modified charts by checking Chart.yaml changes
+      #       MODIFIED_CHARTS=$(git diff --name-only HEAD~1 HEAD | grep "charts/.*/Chart.yaml" || echo "")
             
-            if [[ -z "$MODIFIED_CHARTS" ]]; then
-              echo "No charts were modified in this push"
-              echo "skip=true" >> $GITHUB_OUTPUT
-              exit 0
-            fi
+      #       if [[ -z "$MODIFIED_CHARTS" ]]; then
+      #         echo "No charts were modified in this push"
+      #         echo "skip=true" >> $GITHUB_OUTPUT
+      #         exit 0
+      #       fi
             
-            # Just take the first modified chart for now
-            FIRST_CHART=$(echo "$MODIFIED_CHARTS" | head -n 1)
-            CHART_DIR=$(dirname "$FIRST_CHART")
-            CHART_NAME=$(basename $(dirname "$FIRST_CHART"))
+      #       # Just take the first modified chart for now
+      #       FIRST_CHART=$(echo "$MODIFIED_CHARTS" | head -n 1)
+      #       CHART_DIR=$(dirname "$FIRST_CHART")
+      #       CHART_NAME=$(basename $(dirname "$FIRST_CHART"))
             
-            # Get the version from Chart.yaml
-            VERSION=$(grep -E '^version:' "$FIRST_CHART" | awk '{print $2}' | tr -d '"')
-            TAG="${CHART_NAME}-${VERSION}"
+      #       # Get the version from Chart.yaml
+      #       VERSION=$(grep -E '^version:' "$FIRST_CHART" | awk '{print $2}' | tr -d '"')
+      #       TAG="${CHART_NAME}-${VERSION}"
             
-            echo "Modified chart: $CHART_NAME, version: $VERSION, tag: $TAG"
-          fi
+      #       echo "Modified chart: $CHART_NAME, version: $VERSION, tag: $TAG"
+      #     fi
           
-          echo "chart_name=$CHART_NAME" >> $GITHUB_OUTPUT
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "skip=false" >> $GITHUB_OUTPUT
+      #     echo "chart_name=$CHART_NAME" >> $GITHUB_OUTPUT
+      #     echo "tag=$TAG" >> $GITHUB_OUTPUT
+      #     echo "skip=false" >> $GITHUB_OUTPUT
 
       # - name: Check if release exists
       #   if: steps.extract-chart.outputs.skip != 'true'
@@ -100,7 +100,7 @@ jobs:
       #     fi
 
       - name: Run chart-releaser
-        if: steps.extract-chart.outputs.skip != 'true'
+        # if: steps.extract-chart.outputs.skip != 'true'
         uses: helm/chart-releaser-action@v1.6.0
         with:
           charts_dir: charts
