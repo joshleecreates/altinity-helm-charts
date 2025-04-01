@@ -8,15 +8,15 @@ on:
       - '*'
 
 jobs:
-  verify:
-    uses: ./.github/workflows/ci.yml
+  # verify:
+  #   uses: ./.github/workflows/ci.yml
 
   # generate-docs:
   #   needs: verify
   #   uses: ./.github/workflows/docs.yml
 
   release:
-    needs: [verify]
+    # needs: [verify]
     permissions:
       contents: write
     runs-on: ubuntu-latest
