@@ -16,7 +16,7 @@ jobs:
   #   uses: ./.github/workflows/docs.yml
 
   release:
-    needs: [verify, generate-docs]
+    needs: [verify]
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -41,8 +41,8 @@ jobs:
           helm repo add altinity-operator https://docs.altinity.com/clickhouse-operator
           helm repo add altinity https://helm.altinity.com/
 
-      - name: Generate docs
-        run: make docs
+      # - name: Generate docs
+      #   run: make docs
 
       - name: Extract chart details
         id: extract-chart
