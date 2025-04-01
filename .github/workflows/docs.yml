@@ -1,0 +1,41 @@
+name: Documentation
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.md'
+      - 'charts/*/values.yaml'
+      - 'charts/*/values.schema.json'
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Run helm-docs
+        uses: losisin/helm-docs-github-action@v1
+
+      - name: Check for directly edited markdown files
+        if: github.event_name == 'pull_request'
+        run: |
+          # Get modified files in the PR
+          MODIFIED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -E '\.md$' || true)
+          
+          if [ -n "$MODIFIED_FILES" ]; then
+            # Check if there are differences after running make docs
+            git diff --exit-code || {
+              echo "Error: The following markdown files were edited directly instead of being generated with 'make docs':"
+              git diff --name-only | grep -E '\.md$'
+              echo "Please update the source files and run 'make docs' instead of editing these files directly."
+              exit 1
+            }
+          fi

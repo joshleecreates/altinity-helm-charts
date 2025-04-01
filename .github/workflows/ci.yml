@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**/*.md'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Set up Kubeconform
+        uses: bmuschko/setup-kubeconform@v1
+        
+      - name: Add Operator Chart Repo
+        run: |
+          helm repo add altinity-operator https://docs.altinity.com/clickhouse-operator
+          helm repo add altinity https://helm.altinity.com/
+          helm repo update
+
+      - name: Install helm dependencies
+        run: |
+          # Install dependencies for verification
+          cd charts/clickhouse && helm dependency update
+
+      - name: Run verify scripts
+        run: make verify
