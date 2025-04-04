@@ -3,6 +3,17 @@ entries:
   clickhouse:
   - apiVersion: v2
     appVersion: 24.3.12.76
+    created: "2025-04-04T01:31:39.857671902Z"
+    description: A Helm chart for creating a ClickHouse® Cluster with the Altinity
+      Operator for ClickHouse
+    digest: 244d0a375d96e4c86eb64caf684da9a4dc08321621392301f7039fa290b40b40
+    name: clickhouse
+    type: application
+    urls:
+    - https://github.com/joshleecreates/altinity-helm-charts/releases/download/clickhouse-0.3.1-dev8/clickhouse-0.3.1-dev8.tgz
+    version: 0.3.1-dev8
+  - apiVersion: v2
+    appVersion: 24.3.12.76
     created: "2025-04-02T17:00:37.614008064Z"
     description: A Helm chart for creating a ClickHouse® Cluster with the Altinity
       Operator for ClickHouse
@@ -102,4 +113,4 @@ entries:
     urls:
     - https://github.com/joshleecreates/altinity-helm-charts/releases/download/clickhouse-0.3.1-dev/clickhouse-0.3.1-dev.tgz
     version: 0.3.1-dev
-generated: "2025-04-02T17:00:37.61404878Z"
+generated: "2025-04-04T01:31:39.857723147Z"
